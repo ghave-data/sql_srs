@@ -12,4 +12,4 @@ jobs:
           python -m pip install --upgrade pip
           pip install black
       - run: |
-          black --check --verbose
+          black --check --verbose .
