@@ -1,47 +1,27 @@
 # pylint: disable=missing-module-docstring
-import io
-
 import duckdb
-import pandas as pd
 import streamlit as st
 
-CSV = """
-beverage,price
-orange juice,2.5
-Expresso,2
-Tea,3
-"""
+con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
-beverages = pd.read_csv(io.StringIO(CSV))
-
-CSV2 = """
-food_item,food_price
-cookie,2.5
-chocolatine,2
-muffin,3
-"""
-
-food_items = pd.read_csv(io.StringIO(CSV2))
-
-ANSWER_STRING = """
-SELECT * FROM beverages
-CROSS JOIN food_items
-"""
-
-solution_df = duckdb.sql(ANSWER_STRING).df()
+#solution_df = duckdb.sql(ANSWER_STRING).df()
 
 with st.sidebar:
-    option = st.selectbox(
+    theme = st.selectbox(
         "How would you like to review?",
-        ("Joins", "GroupBy", "Windows Functions"),
+        ("cross_joins", "GroupBy", "window_functions"),
         index=None,
         placeholder="Select contact method...",
     )
 
-    st.write("You selected:", option)
+    st.write("You selected:", theme)
+
+    exercise = con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'").df()
+    st.write(exercise)
 
 st.header("Enter your code:")
 query = st.text_area(label="your SQL code here", key="user_input")
+"""
 if query:
     result = duckdb.sql(query).df()
     st.dataframe(result)
@@ -73,3 +53,4 @@ with tab1:
 
 with tab2:
     st.write(ANSWER_STRING)
+"""
