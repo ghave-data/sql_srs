@@ -1,49 +1,38 @@
 # pylint: disable=missing-module-docstring
-import io
-
 import duckdb
-import pandas as pd
 import streamlit as st
 
-CSV = """
-beverage,price
-orange juice,2.5
-Expresso,2
-Tea,3
-"""
-
-beverages = pd.read_csv(io.StringIO(CSV))
-
-CSV2 = """
-food_item,food_price
-cookie,2.5
-chocolatine,2
-muffin,3
-"""
-
-food_items = pd.read_csv(io.StringIO(CSV2))
-
-ANSWER_STRING = """
-SELECT * FROM beverages
-CROSS JOIN food_items
-"""
-
-solution_df = duckdb.sql(ANSWER_STRING).df()
+con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
 with st.sidebar:
-    option = st.selectbox(
+    theme = st.selectbox(
         "How would you like to review?",
-        ("Joins", "GroupBy", "Windows Functions"),
+        ("cross_joins", "GroupBy", "window_functions"),
         index=None,
         placeholder="Select contact method...",
     )
 
-    st.write("You selected:", option)
+    st.write("You selected:", theme)
+
+    exercise = (
+        con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'")
+        .df()
+        .sort_values("last_reviewed")
+        .reset_index(drop=True)
+    )
+    st.write(exercise)
+
+    exercise_name = exercise.loc[0, "exercise_name"]
+    with open(f"answers/{exercise_name}.sql", "r", encoding="UTF-8") as f:
+        answer = f.read()
+
+    solution_df = con.execute(answer).df()
 
 st.header("Enter your code:")
 query = st.text_area(label="your SQL code here", key="user_input")
+
 if query:
-    result = duckdb.sql(query).df()
+    result = con.execute(query).df()
     st.dataframe(result)
 
     if len(result.columns) != len(solution_df.columns):
@@ -64,12 +53,13 @@ if query:
 tab1, tab2 = st.tabs(["Tables", "Solutions"])
 
 with tab1:
-    st.write("table: beverages")
-    st.dataframe(beverages)
-    st.write("table: food_items")
-    st.dataframe(food_items)
-    st.write("expected:")
+    exercise_tables = exercise.loc[0, "tables"]
+    for table in exercise_tables:
+        st.write(f"Table: {table}")
+        df_table = con.execute(f"SELECT * FROM {table}").df()
+        st.dataframe(df_table)
+    st.write("Expected result:")
     st.dataframe(solution_df)
 
 with tab2:
-    st.write(ANSWER_STRING)
+    st.write(answer)
