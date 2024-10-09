@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring
 import logging
 import os
+from datetime import date, timedelta
 
 import duckdb
 import streamlit as st
@@ -31,6 +32,8 @@ def check_users_solution(user_query: str):
     try:
         result = result[solution_df.columns]
         st.dataframe(result.compare(solution_df))
+        if result.compare(solution_df).shape == (0, 0):
+            st.write("Correct !")
     except KeyError as e:
         st.write("Some columns are missing")
     n_lines_difference = result.shape[0] - solution_df.shape[0]
@@ -73,6 +76,18 @@ query = st.text_area(label="your SQL code here", key="user_input")
 
 if query:
     check_users_solution(query)
+
+for n_days in [2, 7, 21]:
+    if st.button(f"test back in {n_days} days"):
+        next_review = date.today() + timedelta(days=n_days)
+        con.execute(
+            f"UPADATE memory_state SET last_reviewed = '{next_review}'"
+            f"WHERE exercise_name = '{exercise_name}"
+        )
+        st.rerun()
+
+if st.button("Reset"):
+    con.execute("UPDATE memory_state SET last_reviewed = '1970-01-01'")
 
 tab1, tab2 = st.tabs(["Tables", "Solutions"])
 
