@@ -15,6 +15,7 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
+
 def check_users_solution(user_query: str):
     """
     Checks that user query is correct by:
@@ -37,6 +38,7 @@ def check_users_solution(user_query: str):
         st.write(
             f"result has a {n_lines_difference} lines difference with the solution_df"
         )
+
 
 with st.sidebar:
     available_theme_df = con.execute("SELECT DISTINCT theme FROM memory_state").df()
