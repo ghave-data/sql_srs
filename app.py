@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring
-import os
 import logging
+import os
+
 import duckdb
 import streamlit as st
 
@@ -22,16 +23,19 @@ with st.sidebar:
         placeholder="Select contact method...",
     )
 
-    st.write("You selected:", theme)
+    if theme:
+        st.write(f"You selected {theme}")
+        SELECT_EXERCISE_QUERY = f"SELECT * FROM memory_state WHERE theme = '{theme}'"
+    else:
+        SELECT_EXERCISE_QUERY = "SELECT * FROM memory_state"
 
     exercise = (
-        con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'")
+        con.execute(SELECT_EXERCISE_QUERY)
         .df()
         .sort_values("last_reviewed")
         .reset_index(drop=True)
     )
     st.write(exercise)
-
     exercise_name = exercise.loc[0, "exercise_name"]
     with open(f"answers/{exercise_name}.sql", "r", encoding="UTF-8") as f:
         answer = f.read()
