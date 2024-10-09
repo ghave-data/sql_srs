@@ -1,7 +1,6 @@
 # pylint: disable=missing-module-docstring
 import duckdb
 import streamlit as st
-import ast
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
@@ -15,11 +14,16 @@ with st.sidebar:
 
     st.write("You selected:", theme)
 
-    exercise = con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'").df().sort_values("last_reviewed").reset_index(drop=True)
+    exercise = (
+        con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'")
+        .df()
+        .sort_values("last_reviewed")
+        .reset_index(drop=True)
+    )
     st.write(exercise)
 
     exercise_name = exercise.loc[0, "exercise_name"]
-    with open(f"answers/{exercise_name}.sql", "r") as f:
+    with open(f"answers/{exercise_name}.sql", "r", encoding='UTF-8') as f:
         answer = f.read()
 
     solution_df = con.execute(answer).df()
