@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring
 import duckdb
 import streamlit as st
+import ast
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
@@ -21,11 +22,11 @@ with st.sidebar:
 
 st.header("Enter your code:")
 query = st.text_area(label="your SQL code here", key="user_input")
-"""
-if query:
-    result = duckdb.sql(query).df()
-    st.dataframe(result)
 
+if query:
+    result = con.execute(query).df()
+    st.dataframe(result)
+    """
     if len(result.columns) != len(solution_df.columns):
         st.write("Some columns are missing")
 
@@ -40,17 +41,18 @@ if query:
         st.write(
             f"result has a {n_lines_difference} lines difference with the solution_df"
         )
-
+"""
 tab1, tab2 = st.tabs(["Tables", "Solutions"])
 
 with tab1:
-    st.write("table: beverages")
-    st.dataframe(beverages)
-    st.write("table: food_items")
-    st.dataframe(food_items)
-    st.write("expected:")
-    st.dataframe(solution_df)
+    exercise_tables = ast.literal_eval(exercise.loc[0, "tables"])
+    for table in exercise_tables:
+        st.write(f"table: {table}")
+        df_table = con.execute(f"SELECT * FROM {table}").df()
+        st.dataframe(df_table)
 
 with tab2:
-    st.write(ANSWER_STRING)
-"""
+    ANSWER_STRING = exercise.loc[0, "exercise_name"]
+    with open(f"answers/{ANSWER_STRING}.sql", "r") as f:
+        answer = f.read()
+    st.write(answer)
